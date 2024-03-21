@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: pipelinerun-git-clone-build-push-deploy-
+spec:
+  serviceAccountName: buildah-sa
+  pipelineRef:
+    name: pipeline-git-clone-build-push-deploy
+  params:
+  - name: repo-url
+    value: https://github.com/glaceroy/smesh_pattern_status
+  - name: tag-name
+    value: ''
+  - name: python-file
+    value: main.py
+  - name: image-full-path-with-tag
+    value: glaceroy/smesh-dashboard:v1.3
+  - name: deployment-manifest
+    value: https://raw.githubusercontent.com/brightzheng100/tekton-pipeline-example/master/manifests/deployment.yaml
+  workspaces:
+  - name: workspace
+    persistentvolumeclaim:
+      claimName: tekton-pvc
+  - name: empty-dir
+    emptyDir: {}
+      
+

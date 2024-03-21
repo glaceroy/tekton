@@ -1,0 +1,14 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: tekton-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard
+  volumeName: tekton-pv
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 5Gi
