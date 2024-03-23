@@ -1,0 +1,46 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: build-deploy-template
+spec:
+  params:
+  - name: buildRevision
+    description: The Git commit revision
+  - name: buildRepo
+    description: The Git repository to build image from
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: pipelinerun-git-clone-build-push-deploy-
+    spec:
+      serviceAccountName: buildah-sa
+      pipelineRef:
+        name: pipeline-git-clone-build-push-deploy
+      params:
+      - name: repo-url
+        value: $(tt.params.buildRepo)
+      - name: buildRevision
+        value: $(tt.params.buildRevision)
+      - name: python-file
+        value: main.py
+      - name: image-full-path-with-tag
+        value: glaceroy/smesh-dashboard:v1.4
+      - name: deployment-name
+        value: smesh-dashboard
+      - name: deployment-namespace
+        value: smesh-dashboard
+      - name: argo-app-name
+        value: smesh-dashboard
+      - name: configFile
+        value: helm-config/values.yaml
+      - name: configGitUrl
+        value: https://github.com/glaceroy/smesh-dashboard
+      workspaces:
+      - name: workspace
+        persistentvolumeclaim:
+          claimName: tekton-pvc
+      - name: empty-dir
+        emptyDir: {}
+      
+

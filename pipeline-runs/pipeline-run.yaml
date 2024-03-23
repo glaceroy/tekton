@@ -15,8 +15,10 @@ spec:
     value: main.py
   - name: image-full-path-with-tag
     value: glaceroy/smesh-dashboard:v1.3
-  - name: deployment-manifest
-    value: https://raw.githubusercontent.com/brightzheng100/tekton-pipeline-example/master/manifests/deployment.yaml
+  - name: deployment-name
+    value: smesh-dashboard
+  - name: deployment-namespace
+    value: smesh-dashboard
   workspaces:
   - name: workspace
     persistentvolumeclaim:

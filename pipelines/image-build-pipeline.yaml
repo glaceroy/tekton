@@ -15,18 +15,21 @@ spec:
   - name: repo-url
     type: string
     description: The git repository URL to clone from.
-  - name: tag-name
+  - name: buildRevision
     type: string
-    description: The git tag to clone.
+    description: The revision of the build, i.e. the commit revision of the application repository.
   - name: python-file
     type: string
     description: The python file to lint
   - name: image-full-path-with-tag
     type: string
     description: The image full path to host the built image, with version tag, e.g. image-registry.openshift-image-registry.svc:5000/tekton-pipelines/spring-boot-docker:v1.0.0.
-  - name: deployment-manifest
+  - name: deployment-name
     type: string
     description: The manifest file for deployment.
+  - name: deployment-namespace
+    type: string
+    description: The namespace for deployment.
 
   # Workspaces
   workspaces:
@@ -43,8 +46,8 @@ spec:
     params:
     - name: url
       value: $(params.repo-url)
-    - name: revision
-      value: $(params.tag-name)
+    - name: buildRevision
+      value: $(params.buildRevision)
     - name: deleteExisting
       value: "true"
     workspaces:
@@ -88,9 +91,34 @@ spec:
     params:
       - name: script
         value: |
-          kubectl apply -f $(params.deployment-manifest)
-          echo "----------"
-          kubectl get deployment
+          echo "-------------------------"
+          echo "| DEPLOYMENT IN PROGESS |"
+          echo "-------------------------"
+          echo -e "\n"
+          echo "Current app image : $(kubectl get deploy $(params.deployment-name) -n $(params.deployment-namespace) -o jsonpath='{.spec.template.spec.containers[].image}')"
+          echo -e "\n-------------------------"
+          echo "Deploying image tag : $(params.image-full-path-with-tag)"
+          kubectl set image deploy/$(params.deployment-name) -n $(params.deployment-namespace) $(params.deployment-name)=$(params.image-full-path-with-tag)
+          echo -e "\n-------------------------"
+          echo "Post deployment image : $(kubectl get deploy $(params.deployment-name) -n $(params.deployment-namespace) -o jsonpath='{.spec.template.spec.containers[].image}')"
+          echo -e "\n-------------------------"
+          echo "Sleeping for 5"
+          echo -e "\n-------------------------"
+          echo -e "Pod status :\n $(kubectl get po -n $(params.deployment-namespace))"
+          echo -e "\n-------------------------"
+          pod=$(kubectl get po -n $(params.deployment-namespace) -l app.kubernetes.io/name=$(params.deployment-name) --no-headers | awk '{print $1}')
+          post_image=$(kubectl get po $pod -n $(params.deployment-namespace) -o jsonpath='{.spec.containers[].image}')
+          echo -e "\n"
+          if [ $(params.image-full-path-with-tag) == $post_image ]
+          then
+            echo "-------------------------------"
+            echo "| DEPLOYMENT is SUCCESSFUL    |"
+            echo "-------------------------------"
+          else
+            echo "-----------------------"
+            echo "| DEPLOYMENT FAILED   |"
+            echo "---------------------- "         
+          fi
     workspaces:
       - name: kubeconfig-dir
         workspace: empty-dir

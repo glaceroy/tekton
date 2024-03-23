@@ -1,0 +1,77 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: gitops-update-deploy
+spec:
+  params:
+  - description: Name of the argocd application
+    name: argo-app-name
+    type: string
+  - description: Path to the gitops values file 
+    name: configFile
+    type: string
+  - description:  The git repository URL to clone from.
+    name: configGitUrl
+    type: string
+  - description: The new image to be updated
+    name: appImage
+    type: string
+  workspaces:
+  - name: source
+  stepTemplate:
+    envFrom:
+    - secretRef:
+        name: argocd-env-secret
+    env:
+    - name: ARGOCD_SERVER
+      value: argocd-server.argocd
+
+  steps:
+  - name: git-checkout
+    image: alpine/git:v2.26.2
+    workingDir: "$(workspaces.source.path)"
+    script: |
+      #!/usr/bin/env sh
+      set -e
+
+      eval $(ssh-agent)
+      ssh-add ~/.ssh/id_*
+      git config --global core.sshCommand 'ssh -o StrictHostKeyChecking=accept-new'
+
+      git init
+      git remote add origin $(params.configGitUrl)
+      git fetch --depth 1 origin main
+      git checkout main
+
+  - name: update-yaml
+    image: alpine/git:v2.26.2
+    workingDir: "$(workspaces.config-source.path)/$(inputs.params.configFile)"
+    script: |
+      #!/usr/bin/env sh
+      set -e
+
+      echo "updating image to $(inputs.params.appImage)"
+      tag=$(echo $(appImage) | cut -f2 -d :)
+      sed -i "s|^  tag:.*|  tag: $(tag)|" values.yaml
+
+  - name: push-changes-to-gitops-repo
+    image: alpine/git:v2.26.2
+    workingDir: "$(workspaces.config-source.path)/$(inputs.params.configFile)"
+    script: |
+      #!/usr/bin/env sh
+      set -e
+
+      git add .
+      git commit --allow-empty -m "[tekton] updating image to $(inputs.params.appImage)"
+      eval $(ssh-agent)
+      ssh-add ~/.ssh/id_*
+      git push origin main
+
+  - name: wait-for-argocd-rollout
+    image: argoproj/argocd:v1.7.7
+    script: |
+      #!/usr/bin/env sh
+      set -e
+
+      argocd app sync $(inputs.params.argo-app-name) --insecure
+      argocd app wait $(inputs.params.argo-app-name) --sync --health --operation --insecure

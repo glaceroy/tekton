@@ -1,0 +1,10 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: build-deploy-binding
+spec:
+  params:
+  - name: buildRevision
+    value: $(body.head_commit.id)
+  - name: buildRepo
+    value: $(body.repository.url)

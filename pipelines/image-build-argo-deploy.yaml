@@ -1,0 +1,104 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: pipeline-git-clone-build-push-deploy
+spec:
+  description: |
+    this pipeline offers a typical CI/CD process, with a flow including:
+    - fetching a git repository as the source
+    - using buildah to build a Docker image by Dockerfile
+    - pusing the built Docker image to a desired repository
+    - deploying it to Kubernetes cluster
+  
+  # Parameters
+  params:
+  - name: repo-url
+    type: string
+    description: The git repository URL to clone from.
+  - name: buildRevision
+    type: string
+    description: The revision of the build, i.e. the commit revision of the application repository.
+  - name: python-file
+    type: string
+    description: The python file to lint
+  - name: image-full-path-with-tag
+    type: string
+    description: The image full path to host the built image, with version tag, e.g. image-registry.openshift-image-registry.svc:5000/tekton-pipelines/spring-boot-docker:v1.0.0.
+  - name: deployment-name
+    type: string
+    description: The manifest file for deployment.
+  - name: deployment-namespace
+    type: string
+    description: The namespace for deployment.
+
+  # Workspaces
+  workspaces:
+  - name: workspace
+  - name: empty-dir
+  
+  # Taksks
+  tasks:
+
+  # 1. Task - fetch-repository
+  - name: fetch-repository
+    taskRef:
+      name: git-clone
+    params:
+    - name: url
+      value: $(params.repo-url)
+    - name: buildRevision
+      value: $(params.buildRevision)
+    - name: deleteExisting
+      value: "true"
+    workspaces:
+    - name: output
+      workspace: workspace
+
+  # 2. Task - python tests - pylint
+  - name: pylint
+    taskRef:
+      name: pylint
+    runAfter:
+    - fetch-repository
+    params:
+      - name: path
+        value: "$(params.python-file)"
+    workspaces:
+      - name: source
+        workspace: workspace
+
+  # 3. Task - buildah build & push image
+  - name: build-and-push
+    taskRef:
+      name: buildah
+    runAfter:
+    - pylint
+    params:
+      - name: IMAGE
+        value: "$(params.image-full-path-with-tag)"
+      - name: TLSVERIFY
+        value: "false"
+    workspaces:
+      - name: source
+        workspace: workspace
+
+  # 4.  Task - gitops-update-deploy
+  - name: gitops-update-deploy
+    taskRef:
+      name: gitops-update-deploy
+    runAfter:
+    - build-and-push
+    params:
+    - name: argocd-app-name
+      value: $(params.argocd-app-name)
+    - name: configFile
+      value: $(params.configFile)
+    - name: configGitUrl
+      value: $(params.configGitUrl)
+    - name: appImage
+      value: $(params.appImage)
+    workspaces:
+    - name: source
+      workspace: workspace
+
+  
