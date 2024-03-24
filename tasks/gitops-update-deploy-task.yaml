@@ -5,7 +5,7 @@ metadata:
 spec:
   params:
   - description: Name of the argocd application
-    name: argo-app-name
+    name: argocd-app-name
     type: string
   - description: Path to the gitops values file 
     name: configFile
@@ -14,8 +14,9 @@ spec:
     name: configGitUrl
     type: string
   - description: The new image to be updated
-    name: appImage
+    name: image-full-path-with-tag
     type: string
+    default: glaceroy/smesh-dashboard:v1.4
   workspaces:
   - name: source
   stepTemplate:
@@ -50,8 +51,8 @@ spec:
       #!/usr/bin/env sh
       set -e
 
-      echo "updating image to $(inputs.params.appImage)"
-      tag=$(echo $(appImage) | cut -f2 -d :)
+      echo "updating image to $(inputs.params.image-full-path-with-tag)"
+      tag=$(echo $(image-full-path-with-tag) | cut -f2 -d :)
       sed -i "s|^  tag:.*|  tag: $(tag)|" values.yaml
 
   - name: push-changes-to-gitops-repo
@@ -62,7 +63,7 @@ spec:
       set -e
 
       git add .
-      git commit --allow-empty -m "[tekton] updating image to $(inputs.params.appImage)"
+      git commit --allow-empty -m "[tekton] updating image to $(inputs.params.image-full-path-with-tag)"
       eval $(ssh-agent)
       ssh-add ~/.ssh/id_*
       git push origin main

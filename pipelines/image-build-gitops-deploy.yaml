@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: pipeline-git-clone-build-push-deploy
+  name: pipeline-build-push-gitops-deploy
 spec:
   description: |
     this pipeline offers a typical CI/CD process, with a flow including:
@@ -24,12 +24,15 @@ spec:
   - name: image-full-path-with-tag
     type: string
     description: The image full path to host the built image, with version tag, e.g. image-registry.openshift-image-registry.svc:5000/tekton-pipelines/spring-boot-docker:v1.0.0.
-  - name: deployment-name
+  - name: argocd-app-name
     type: string
-    description: The manifest file for deployment.
-  - name: deployment-namespace
+    description: Name of the argocd application
+  - name: configFile
     type: string
-    description: The namespace for deployment.
+    description: Path to the gitops values file 
+  - name: configGitUrl
+    type: string
+    description:  The git repository URL to clone from.
 
   # Workspaces
   workspaces:
@@ -96,7 +99,7 @@ spec:
     - name: configGitUrl
       value: $(params.configGitUrl)
     - name: appImage
-      value: $(params.appImage)
+      value: $(params.image-full-path-with-tag)
     workspaces:
     - name: source
       workspace: workspace

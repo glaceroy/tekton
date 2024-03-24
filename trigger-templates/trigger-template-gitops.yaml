@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: build-deploy-template
+  name: build-push-gitops-deploy-template
 spec:
   params:
   - name: buildRevision
@@ -12,11 +12,11 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: pipelinerun-git-clone-build-push-deploy-
+      generateName: pipeline-build-push-gitops-deploy-
     spec:
       serviceAccountName: buildah-sa
       pipelineRef:
-        name: pipeline-git-clone-build-push-deploy
+        name: pipeline-build-push-gitops-deploy
       params:
       - name: repo-url
         value: $(tt.params.buildRepo)
@@ -30,7 +30,7 @@ spec:
         value: smesh-dashboard
       - name: deployment-namespace
         value: smesh-dashboard
-      - name: argo-app-name
+      - name: argocd-app-name
         value: smesh-dashboard
       - name: configFile
         value: helm-config/values.yaml
