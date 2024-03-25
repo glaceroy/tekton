@@ -3,6 +3,14 @@ kind: Task
 metadata:
   name: gitops-repo-update
 spec:
+  description: >-
+    These Tasks are Git tasks to work with repositories used by other tasks
+    in your Pipeline.
+
+    The git-repo-update Task will fetch the gitops repo and update the config file and push it back to git.
+  workspaces:
+  - name: source
+    description: The git repo will be fetched onto the volume backing this Workspace.
   params:
   - description: Name of the argocd application
     name: argocd-app-name
@@ -16,9 +24,6 @@ spec:
   - description: The new image to be updated
     name: image-full-path-with-tag
     type: string
-  workspaces:
-  - name: source
-
   steps:
   - name: git-checkout
     image: alpine/git:v2.26.2
@@ -33,8 +38,7 @@ spec:
       git config --global core.sshCommand 'ssh -o StrictHostKeyChecking=accept-new'
 
       git init
-      git remote remove origin
-      git remote add origin $(params.configGitUrl)
+      git remote add origin $(inputs.params.configGitUrl)
       git fetch --depth 1 origin main
       git checkout main
 
@@ -66,3 +70,4 @@ spec:
       ssh-add ~/.ssh/id_*
       ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
       git push origin main
+

@@ -3,7 +3,7 @@ kind: PipelineRun
 metadata:
   generateName: pipeline-build-push-gitops-deploy-
 spec:
-  serviceAccountName: buildah-sa
+  serviceAccountName: pipeline-sa
   pipelineRef:
     name: pipeline-build-push-gitops-deploy
   params:
