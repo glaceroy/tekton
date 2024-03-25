@@ -25,7 +25,7 @@ spec:
       - name: python-file
         value: main.py
       - name: image-full-path-with-tag
-        value: glaceroy/smesh-dashboard:v1.4
+        value: glaceroy/smesh-dashboard:v1.7
       - name: deployment-name
         value: smesh-dashboard
       - name: deployment-namespace

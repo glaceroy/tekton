@@ -32,6 +32,12 @@ spec:
       #!/usr/bin/env sh
       set -e
 
+      echo "Cleardown workspace directory"
+      if [ -d "$(workspaces.source.path)/$(inputs.params.argocd-app-name)" ]; then
+        rm -rf $(workspaces.source.path)/$(inputs.params.argocd-app-name)/*
+        rm -rf $(workspaces.source.path)/$(inputs.params.argocd-app-name)/.[!.]*
+      fi
+
       eval $(ssh-agent)
       ssh-add ~/.ssh/id_*
       ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts

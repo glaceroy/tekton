@@ -1,7 +1,8 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: tekton-triggers
+  name: smesh-dashboard-gw
+  namespace: smesh-dashboard
 spec:
   selector:
     istio: ingressgateway
@@ -11,21 +12,22 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "tekton-triggers.example.com"
+    - "smesh-dashboard.example.com"
 ---
 
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: tekton-triggers
+  namespace: smesh-dashboard
 spec:
   hosts:
-  - "tekton-triggers.example.com"
+  - "smesh-dashboard.example.com"
   gateways:
-  - tekton-triggers
+  - smesh-dashboard-gw
   http:
   - route:
     - destination:
-        host: el-gitops-deploy-eventlistener
+        host: smesh-dashboard
         port:
-          number: 8080
+          number: 5000
