@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: gitops-update-deploy-run
+spec:
+  serviceAccountName: github-update-sa
+  taskRef:
+    name: gitops-repo-update
+  workspaces:
+    - name: source
+      persistentVolumeClaim:
+        claimName: tekton-pvc
+  params:
+    - name: argocd-app-name
+      value: smesh-dashboard
+    - name: configFile
+      value: helm-config/values.yaml
+    - name: configGitUrl
+      value: git@github.com:glaceroy/smesh-dashboard.git
+    - name: image-full-path-with-tag
+      value: glaceroy/smesh-dashboard:v1.4

@@ -85,10 +85,10 @@ spec:
       - name: source
         workspace: workspace
 
-  # 4.  Task - gitops-update-deploy
-  - name: gitops-update-deploy
+  # 4.  Task - gitops-repo-update
+  - name: gitops-repo-update
     taskRef:
-      name: gitops-update-deploy
+      name: gitops-repo-update
     runAfter:
     - build-and-push
     params:
@@ -98,10 +98,20 @@ spec:
       value: $(params.configFile)
     - name: configGitUrl
       value: $(params.configGitUrl)
-    - name: appImage
+    - name: image-full-path-with-tag
       value: $(params.image-full-path-with-tag)
     workspaces:
     - name: source
       workspace: workspace
+
+  # 5.  Task - gitops-deploy
+  - name: gitops-deploy
+    taskRef:
+      name: argocd-task-sync-and-wait
+    runAfter:
+    - gitops-repo-update
+    params:
+    - name: application-name
+      value: $(params.argocd-app-name)
 
   

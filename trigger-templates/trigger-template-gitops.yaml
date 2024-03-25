@@ -14,7 +14,7 @@ spec:
     metadata:
       generateName: pipeline-build-push-gitops-deploy-
     spec:
-      serviceAccountName: buildah-sa
+      serviceAccountName: pipeline-sa
       pipelineRef:
         name: pipeline-build-push-gitops-deploy
       params:
@@ -35,7 +35,7 @@ spec:
       - name: configFile
         value: helm-config/values.yaml
       - name: configGitUrl
-        value: https://github.com/glaceroy/smesh-dashboard
+        value: git@github.com:glaceroy/smesh-dashboard.git
       workspaces:
       - name: workspace
         persistentvolumeclaim:

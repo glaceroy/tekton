@@ -1,0 +1,11 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  name: argocd-sync-deploy
+spec:
+  serviceAccountName: github-update-sa
+  taskRef:
+    name: argocd-task-sync-and-wait
+  params:
+    - name: application-name
+      value: nginx-endpoint
