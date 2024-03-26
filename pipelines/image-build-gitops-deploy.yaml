@@ -43,7 +43,7 @@ spec:
   tasks:
 
   # 1. Task - fetch-repository
-  - name: fetch-repository
+  - name: fetch-code-repository
     taskRef:
       name: git-clone
     params:
@@ -58,11 +58,11 @@ spec:
       workspace: workspace
 
   # 2. Task - python tests - pylint
-  - name: pylint
+  - name: pylint-test-suite
     taskRef:
       name: pylint
     runAfter:
-    - fetch-repository
+    - fetch-code-repository
     params:
       - name: path
         value: "$(params.python-file)"
@@ -71,11 +71,11 @@ spec:
         workspace: workspace
 
   # 3. Task - buildah build & push image
-  - name: build-and-push
+  - name: build-and-push-image
     taskRef:
       name: buildah
     runAfter:
-    - pylint
+    - pylint-test-suite
     params:
       - name: IMAGE
         value: "$(params.image-full-path-with-tag)"
@@ -90,7 +90,7 @@ spec:
     taskRef:
       name: gitops-repo-update
     runAfter:
-    - build-and-push
+    - build-and-push-image
     params:
     - name: argocd-app-name
       value: $(params.argocd-app-name)
@@ -105,7 +105,7 @@ spec:
       workspace: workspace
 
   # 5.  Task - gitops-deploy
-  - name: gitops-deploy
+  - name: gitops-deploy-and-sync
     taskRef:
       name: argocd-task-sync-and-wait
     runAfter:

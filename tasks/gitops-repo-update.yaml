@@ -25,7 +25,7 @@ spec:
     name: image-full-path-with-tag
     type: string
   steps:
-  - name: git-checkout
+  - name: checkout
     image: alpine/git:v2.26.2
     workingDir: "$(workspaces.source.path)/$(inputs.params.argocd-app-name)"
     script: |
@@ -48,7 +48,7 @@ spec:
       git fetch --depth 1 origin main
       git checkout main
 
-  - name: update-yaml
+  - name: update
     image: alpine/git:v2.26.2
     workingDir: "$(workspaces.source.path)/$(inputs.params.argocd-app-name)"
     script: |
@@ -60,7 +60,7 @@ spec:
       echo "Updating to Image Tag: ${tag}"
       sed -i "s|^  tag:.*|  tag: ${tag}|" $(workspaces.source.path)/$(inputs.params.argocd-app-name)/$(inputs.params.configFile)
 
-  - name: push-changes-to-gitops-repo
+  - name: push
     image: alpine/git:v2.26.2
     workingDir: "$(workspaces.source.path)/$(inputs.params.argocd-app-name)"
     script: |
