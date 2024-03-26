@@ -75,7 +75,7 @@ spec:
     taskRef:
       name: buildah
     runAfter:
-    - pylint-test-suite
+    - run-pylint-tests
     params:
       - name: IMAGE
         value: "$(params.image-full-path-with-tag)"
