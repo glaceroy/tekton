@@ -58,7 +58,7 @@ spec:
       workspace: workspace
 
   # 2. Task - python tests - pylint
-  - name: pylint-test-suite
+  - name: run-pylint-tests
     taskRef:
       name: pylint
     runAfter:
@@ -105,7 +105,7 @@ spec:
       workspace: workspace
 
   # 5.  Task - gitops-deploy
-  - name: gitops-deploy-and-sync
+  - name: gitops-deploy
     taskRef:
       name: argocd-task-sync-and-wait
     runAfter:
